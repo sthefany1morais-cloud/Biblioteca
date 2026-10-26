@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Biblioteca | Painel de controle</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-icon"><i class="fa-solid fa-book-open"></i></span><span>Biblioteca<span class="brand-subtitle">GESTÃO DO ACERVO</span></span></a>
+      <nav class="side-nav" aria-label="Navegação principal">
+        <a class="nav-link active" href="#inicio"><i class="fa-solid fa-grid-2"></i> Visão geral</a>
+        <a class="nav-link" href="#acervo"><i class="fa-solid fa-book"></i> Acervo de livros</a>
+        <button class="nav-link" id="navAdd"><i class="fa-solid fa-circle-plus"></i> Adicionar livro</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="database-status"><span class="status-dot"></span><span><strong>Banco de dados</strong><small>MongoDB conectado via Flask</small></span></div>
+        <div class="sidebar-note"><i class="fa-solid fa-shield-halved"></i><span>Projeto acadêmico<br>Biblioteca NoSQL</span></div>
+      </div>
+    </aside>
+
+    <main class="main-area" id="inicio">
+      <header class="topbar">
+        <div class="mobile-brand"><i class="fa-solid fa-book-open"></i> Biblioteca</div>
+        <div class="breadcrumb"><span>Workspace</span><i class="fa-solid fa-chevron-right"></i><strong>Acervo</strong></div>
+        <div class="topbar-right"><span class="today-label"><i class="fa-regular fa-calendar"></i> Painel administrativo</span><span class="avatar">BI</span></div>
+      </header>
+
+      <section class="page-content">
+        <div class="page-heading">
+          <div><p class="eyebrow">PAINEL DE CONTROLE</p><h1>Visão geral do acervo</h1><p class="page-description">Acompanhe e gerencie os livros da sua biblioteca em um só lugar.</p></div>
+          <button class="btn btn-primary" id="addBookBtn"><i class="fa-solid fa-plus"></i> Adicionar livro</button>
+        </div>
+
+        <div class="alert" id="alertBox" role="status" hidden></div>
+
+        <section class="stats-grid" aria-label="Resumo do acervo">
+          <article class="stat-card"><div class="stat-top"><span class="stat-label">Total de livros</span><span class="stat-icon icon-purple"><i class="fa-solid fa-book-open"></i></span></div><div class="stat-value" id="totalBooks">—</div><div class="stat-foot">Livros cadastrados no sistema</div></article>
+          <article class="stat-card"><div class="stat-top"><span class="stat-label">Disponíveis</span><span class="stat-icon icon-green"><i class="fa-solid fa-bookmark"></i></span></div><div class="stat-value" id="availableBooks">—</div><div class="stat-foot">Prontos para empréstimo</div></article>
+          <article class="stat-card"><div class="stat-top"><span class="stat-label">Emprestados</span><span class="stat-icon icon-orange"><i class="fa-solid fa-book-reader"></i></span></div><div class="stat-value" id="loanedBooks">—</div><div class="stat-foot">Indisponíveis no momento</div></article>
+        </section>
+
+        <section class="panel" id="acervo">
+          <div class="panel-heading">
+            <div><h2>Catálogo de livros</h2><p>Consulte, edite ou remova registros do acervo.</p></div>
+            <span class="records-count" id="recordsCount">0 registros</span>
+          </div>
+          <div class="toolbar">
+            <label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" type="search" placeholder="Buscar por título, autor ou gênero..." aria-label="Buscar livros"></label>
+            <button class="btn btn-light" id="refreshBtn"><i class="fa-solid fa-rotate"></i><span>Atualizar</span></button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Livro</th><th>Autor</th><th>Ano</th><th>Gênero</th><th>Status</th><th class="actions-heading">Ações</th></tr></thead>
+              <tbody id="booksTable"><tr><td colspan="6" class="table-message"><span class="spinner"></span> Carregando acervo...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="panel-footer"><span id="tableSummary">Carregando registros...</span><span class="footer-note"><i class="fa-solid fa-database"></i> Dados armazenados no MongoDB</span></div>
+        </section>
+
+        <footer class="page-footer"><span>Biblioteca NoSQL <span class="footer-dot">•</span> Projeto acadêmico</span><span>Interface Flask + MongoDB</span></footer>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="bookModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-heading"><div><p class="eyebrow">GERENCIAR ACERVO</p><h2 id="modalTitle">Adicionar livro</h2><p>Preencha os dados para salvar o registro.</p></div><button class="icon-button" id="closeModal" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></div>
+      <form id="bookForm">
+        <input type="hidden" id="bookId">
+        <div class="form-grid">
+          <label class="form-field full-width">Título do livro <span>*</span><input id="title" name="titulo" required maxlength="160" placeholder="Ex.: Dom Casmurro"></label>
+          <label class="form-field full-width">Autor <span>*</span><input id="author" name="autor" required maxlength="120" placeholder="Ex.: Machado de Assis"></label>
+          <label class="form-field">Ano de publicação <span>*</span><input id="year" name="ano" type="number" min="0" max="2100" required placeholder="Ex.: 1899"></label>
+          <label class="form-field">Gênero <span>*</span><input id="genre" name="genero" required maxlength="80" placeholder="Ex.: Romance"></label>
+          <label class="form-field full-width status-field"><span class="field-title">Disponibilidade</span><span class="toggle-row"><input id="available" type="checkbox" checked><span>Livro disponível para empréstimo</span></span></label>
+        </div>
+        <div class="form-error" id="formError" hidden></div>
+        <div class="modal-actions"><button type="button" class="btn btn-light" id="cancelModal">Cancelar</button><button type="submit" class="btn btn-primary" id="saveBtn"><i class="fa-solid fa-floppy-disk"></i> Salvar livro</button></div>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    const API = "/livros";
+    let books = [];
+    const $ = (id) => document.getElementById(id);
+
+    function showAlert(message, type = "success") {
+      const box = $("alertBox");
+      box.className = `alert alert-${type}`;
+      box.textContent = message;
+      box.hidden = false;
+      window.clearTimeout(showAlert.timer);
+      showAlert.timer = window.setTimeout(() => box.hidden = true, 4500);
+    }
+
+    async function apiRequest(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.erro || data.mensagem || `Erro HTTP ${response.status}`);
+      return data;
+    }
+
+    function safeText(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+    }
+
+    function renderBooks() {
+      const term = $("searchInput").value.trim().toLocaleLowerCase("pt-BR");
+      const filtered = books.filter(book =>
+        [book.titulo, book.autor, book.genero, book.ano]
+          .some(value => String(value ?? "").toLocaleLowerCase("pt-BR").includes(term))
+      );
+      $("totalBooks").textContent = books.length;
+      $("availableBooks").textContent = books.filter(book => book.disponivel !== false).length;
+      $("loanedBooks").textContent = books.filter(book => book.disponivel === false).length;
+      $("recordsCount").textContent = `${filtered.length} ${filtered.length === 1 ? "registro" : "registros"}`;
+      $("tableSummary").textContent = `Exibindo ${filtered.length} de ${books.length} livros`;
+
+      if (!filtered.length) {
+        $("booksTable").innerHTML = `<tr><td colspan="6" class="empty-state"><span class="empty-icon"><i class="fa-solid fa-book-open"></i></span><strong>${term ? "Nenhum resultado encontrado" : "Seu acervo ainda está vazio"}</strong><span>${term ? "Tente buscar com outros termos." : "Adicione o primeiro livro para começar."}</span>${term ? "" : '<button class="btn btn-primary btn-small" onclick="openModal()">Adicionar primeiro livro</button>'}</td></tr>`;
+        return;
+      }
+
+      $("booksTable").innerHTML = filtered.map(book => {
+        const id = safeText(book._id);
+        const available = book.disponivel !== false;
+        const initials = String(book.titulo || "L").trim().slice(0, 1).toUpperCase();
+        return `<tr>
+          <td><div class="book-cell"><span class="book-cover">${safeText(initials)}</span><span class="book-title">${safeText(book.titulo)}</span></div></td>
+          <td>${safeText(book.autor)}</td><td>${safeText(book.ano)}</td><td><span class="genre-pill">${safeText(book.genero)}</span></td>
+          <td><span class="status ${available ? "status-available" : "status-loaned"}"><span></span>${available ? "Disponível" : "Emprestado"}</span></td>
+          <td><div class="row-actions"><button class="icon-button edit-button" title="Editar livro" aria-label="Editar ${safeText(book.titulo)}" onclick="editBook('${id}')"><i class="fa-solid fa-pen"></i></button><button class="icon-button delete-button" title="Excluir livro" aria-label="Excluir ${safeText(book.titulo)}" onclick="deleteBook('${id}')"><i class="fa-regular fa-trash-can"></i></button></div></td>
+        </tr>`;
+      }).join("");
+    }
+
+    async function loadBooks() {
+      $("booksTable").innerHTML = '<tr><td colspan="6" class="table-message"><span class="spinner"></span> Carregando acervo...</td></tr>';
+      try {
+        const result = await apiRequest(API);
+        books = Array.isArray(result) ? result : [];
+        renderBooks();
+      } catch (error) {
+        $("booksTable").innerHTML = `<tr><td colspan="6" class="table-message error-text"><i class="fa-solid fa-triangle-exclamation"></i> Não foi possível carregar os livros. ${safeText(error.message)}<br><small>Confira se o Flask e o MongoDB estão em execução.</small></td></tr>`;
+        $("totalBooks").textContent = "—"; $("availableBooks").textContent = "—"; $("loanedBooks").textContent = "—";
+      }
+    }
+
+    function openModal(book = null) {
+      $("bookForm").reset();
+      $("formError").hidden = true;
+      $("bookId").value = book?._id || "";
+      $("modalTitle").textContent = book ? "Editar livro" : "Adicionar livro";
+      $("saveBtn").innerHTML = book ? '<i class="fa-solid fa-floppy-disk"></i> Salvar alterações' : '<i class="fa-solid fa-floppy-disk"></i> Salvar livro';
+      $("title").value = book?.titulo || "";
+      $("author").value = book?.autor || "";
+      $("year").value = book?.ano ?? "";
+      $("genre").value = book?.genero || "";
+      $("available").checked = book ? book.disponivel !== false : true;
+      $("bookModal").hidden = false;
+      document.body.classList.add("modal-open");
+      setTimeout(() => $("title").focus(), 50);
+    }
+
+    function closeModal() {
+      $("bookModal").hidden = true;
+      document.body.classList.remove("modal-open");
+    }
+
+    function editBook(id) {
+      const book = books.find(item => item._id === id);
+      if (book) openModal(book);
+    }
+
+    async function deleteBook(id) {
+      const book = books.find(item => item._id === id);
+      if (!book || !confirm(`Deseja realmente excluir "${book.titulo}"? Esta ação não pode ser desfeita.`)) return;
+      try {
+        await apiRequest(`${API}/${encodeURIComponent(id)}`, { method: "DELETE" });
+        showAlert("Livro excluído com sucesso.");
+        await loadBooks();
+      } catch (error) { showAlert(error.message, "error"); }
+    }
+
+    $("bookForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const id = $("bookId").value;
+      const payload = {
+        titulo: $("title").value.trim(),
+        autor: $("author").value.trim(),
+        ano: Number($("year").value),
+        genero: $("genre").value.trim(),
+        disponivel: $("available").checked
+      };
+      if (!payload.titulo || !payload.autor || !payload.genero || !Number.isInteger(payload.ano) || payload.ano < 0 || payload.ano > 2100) {
+        $("formError").textContent = "Confira os campos. O ano deve ser um número inteiro válido.";
+        $("formError").hidden = false;
+        return;
+      }
+      const button = $("saveBtn");
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner spinner-light"></span> Salvando...';
+      try {
+        await apiRequest(id ? `${API}/${encodeURIComponent(id)}` : API, {
+          method: id ? "PUT" : "POST",
+          body: JSON.stringify(payload)
+        });
+        closeModal();
+        showAlert(id ? "Livro atualizado com sucesso." : "Livro cadastrado com sucesso.");
+        await loadBooks();
+      } catch (error) {
+        $("formError").textContent = error.message;
+        $("formError").hidden = false;
+      } finally {
+        button.disabled = false;
+        button.innerHTML = id ? '<i class="fa-solid fa-floppy-disk"></i> Salvar alterações' : '<i class="fa-solid fa-floppy-disk"></i> Salvar livro';
+      }
+    });
+
+    $("addBookBtn").addEventListener("click", () => openModal());
+    $("navAdd").addEventListener("click", () => openModal());
+    $("closeModal").addEventListener("click", closeModal);
+    $("cancelModal").addEventListener("click", closeModal);
+    $("refreshBtn").addEventListener("click", loadBooks);
+    $("searchInput").addEventListener("input", renderBooks);
+    $("bookModal").addEventListener("click", event => { if (event.target === $("bookModal")) closeModal(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape" && !$("bookModal").hidden) closeModal(); });
+
+    loadBooks();
+  </script>
+</body>
+</html>
