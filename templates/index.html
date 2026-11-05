@@ -86,7 +86,37 @@
       </form>
     </section>
   </div>
+    <div class="modal-backdrop" id="recommendationsModal" hidden>
+      <section class="modal" role="dialog" aria-modal="true"
+               aria-labelledby="recommendationsTitle">
 
+          <div class="modal-heading">
+              <div>
+                  <p class="eyebrow">SISTEMA DE RECOMENDAÇÃO</p>
+                  <h2 id="recommendationsTitle">Recomendações de leitura</h2>
+                  <p id="recommendationsSubtitle">
+                      Livros selecionados com base em suas características.
+                  </p>
+              </div>
+
+              <button class="icon-button" id="closeRecommendations"
+                      aria-label="Fechar">
+                  <i class="fa-solid fa-xmark"></i>
+              </button>
+          </div>
+
+          <div id="recommendationsContent">
+              <!-- Os resultados serão inseridos pelo JavaScript -->
+          </div>
+
+          <div class="modal-actions">
+              <button class="btn btn-light" id="closeRecommendationsBtn">
+                  Fechar
+              </button>
+          </div>
+
+      </section>
+    </div>
   <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 </body>
 </html>

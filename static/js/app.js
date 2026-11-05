@@ -93,16 +93,23 @@ function renderBooks() {
         </td>
         <td>
           <div class="row-actions">
-            <button class="icon-button edit-button" title="Editar livro"
-              aria-label="Editar ${safeText(book.titulo)}"
-              onclick="editBook('${id}')">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="icon-button delete-button" title="Excluir livro"
-              aria-label="Excluir ${safeText(book.titulo)}"
-              onclick="deleteBook('${id}')">
-              <i class="fa-regular fa-trash-can"></i>
-            </button>
+              <button class="icon-button edit-button" title="Editar livro"
+                aria-label="Editar ${safeText(book.titulo)}"
+                onclick="editBook('${id}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+
+              <button class="icon-button recommend-button" title="Ver recomendações"
+                aria-label="Ver recomendações para ${safeText(book.titulo)}"
+                onclick="recommendBooks('${id}')">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </button>
+
+              <button class="icon-button delete-button" title="Excluir livro"
+                aria-label="Excluir ${safeText(book.titulo)}"
+                onclick="deleteBook('${id}')">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
           </div>
         </td>
       </tr>`;
@@ -165,9 +172,82 @@ function closeModal() {
   document.body.classList.remove("modal-open");
 }
 
+function closeRecommendations() {
+  $("recommendationsModal").hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
 function editBook(id) {
   const book = books.find(item => item._id === id);
   if (book) openModal(book);
+}
+
+async function recommendBooks(id) {
+  const book = books.find(item => item._id === id);
+
+  if (!book) return;
+
+  const content = $("recommendationsContent");
+
+  $("recommendationsTitle").textContent = "Recomendações de leitura";
+  $("recommendationsSubtitle").textContent =
+    `Livros semelhantes a "${book.titulo}"`;
+
+  content.innerHTML = `
+    <div class="table-message">
+      <span class="spinner"></span> Buscando recomendações...
+    </div>
+  `;
+
+  $("recommendationsModal").hidden = false;
+  document.body.classList.add("modal-open");
+
+  try {
+    const recommendations = await apiRequest(
+      `${API}/${encodeURIComponent(id)}/recomendacoes`
+    );
+
+    if (!recommendations.length) {
+      content.innerHTML = `
+        <div class="empty-state">
+          <strong>Nenhuma recomendação encontrada.</strong>
+          <span>Não encontramos outros livros com características semelhantes.</span>
+        </div>
+      `;
+      return;
+    }
+
+    content.innerHTML = recommendations.map(item => `
+      <article class="recommendation-card">
+        <div class="recommendation-info">
+          <h3>${safeText(item.titulo)}</h3>
+          <p>${safeText(item.autor)} · ${safeText(item.ano)}</p>
+          <span class="genre-pill">${safeText(item.genero)}</span>
+        </div>
+
+        <div class="recommendation-score">
+          <strong>${safeText(item.pontuacao_recomendacao)}</strong>
+          <small>pontos</small>
+        </div>
+
+        <div class="recommendation-reasons">
+          <strong>Por que recomendamos?</strong>
+          <ul>
+            ${item.motivos_recomendacao.map(motivo =>
+              `<li>${safeText(motivo)}</li>`
+            ).join("")}
+          </ul>
+        </div>
+      </article>
+    `).join("");
+
+  } catch (error) {
+    content.innerHTML = `
+      <div class="form-error">
+        ${safeText(error.message)}
+      </div>
+    `;
+  }
 }
 
 async function deleteBook(id) {
@@ -193,73 +273,62 @@ $("bookForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   const id = $("bookId").value;
-
   const payload = {
     titulo: $("title").value.trim(),
     autor: $("author").value.trim(),
-    ano: Number($("year").value),
+    ano: parseInt($("year").value, 10),
     genero: $("genre").value.trim(),
     disponivel: $("available").checked
   };
 
-  if (
-    !payload.titulo ||
-    !payload.autor ||
-    !payload.genero ||
-    !Number.isInteger(payload.ano) ||
-    payload.ano < 0 ||
-    payload.ano > 2100
-  ) {
-    $("formError").textContent = "Confira os campos. O ano deve ser um número inteiro válido.";
-    $("formError").hidden = false;
-    return;
-  }
-
-  const button = $("saveBtn");
-  button.disabled = true;
-  button.innerHTML = '<span class="spinner spinner-light"></span> Salvando...';
-
   try {
-    await apiRequest(id ? `${API}/${encodeURIComponent(id)}` : API, {
-      method: id ? "PUT" : "POST",
-      body: JSON.stringify(payload)
-    });
-
+    if (id) {
+      await apiRequest(`${API}/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+      showAlert("Livro atualizado com sucesso.");
+    } else {
+      await apiRequest(API, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      showAlert("Livro adicionado com sucesso.");
+    }
     closeModal();
-
-    showAlert(
-      id ? "Livro atualizado com sucesso." : "Livro cadastrado com sucesso."
-    );
-
     await loadBooks();
-
   } catch (error) {
     $("formError").textContent = error.message;
     $("formError").hidden = false;
-
-  } finally {
-    button.disabled = false;
-
-    button.innerHTML = id
-      ? '<i class="fa-solid fa-floppy-disk"></i> Salvar alterações'
-      : '<i class="fa-solid fa-floppy-disk"></i> Salvar livro';
   }
 });
 
+$("searchInput").addEventListener("input", renderBooks);
 $("addBookBtn").addEventListener("click", () => openModal());
 $("navAdd").addEventListener("click", () => openModal());
 $("closeModal").addEventListener("click", closeModal);
 $("cancelModal").addEventListener("click", closeModal);
-$("refreshBtn").addEventListener("click", loadBooks);
-$("searchInput").addEventListener("input", renderBooks);
 
 $("bookModal").addEventListener("click", event => {
   if (event.target === $("bookModal")) closeModal();
 });
 
+$("closeRecommendations").addEventListener("click", closeRecommendations);
+$("closeRecommendationsBtn").addEventListener("click", closeRecommendations);
+
+$("recommendationsModal").addEventListener("click", event => {
+  if (event.target === $("recommendationsModal")) {
+    closeRecommendations();
+  }
+});
+
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !$("bookModal").hidden) {
-    closeModal();
+  if (event.key === "Escape") {
+    if (!$("recommendationsModal").hidden) {
+      closeRecommendations();
+    } else if (!$("bookModal").hidden) {
+      closeModal();
+    }
   }
 });
 

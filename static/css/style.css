@@ -208,3 +208,141 @@ body.modal-open { overflow: hidden; }
   .form-field.full-width { grid-column: auto; }
   .modal-actions .btn { flex: 1; }
 }
+/* ========================================
+   SISTEMA DE RECOMENDAÇÃO DE LEITURA
+======================================== */
+
+.recommend-button {
+  color: #7167e8;
+  background: #f5f3ff;
+  border-color: #e5e0ff;
+}
+
+.recommend-button:hover {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+#recommendationsModal .modal {
+  width: min(100%, 680px);
+}
+
+#recommendationsContent {
+  padding: 22px 27px;
+}
+
+.recommendation-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 15px;
+  padding: 19px;
+  margin-bottom: 13px;
+  background: #fcfcff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: .2s ease;
+}
+
+.recommendation-card:last-child {
+  margin-bottom: 0;
+}
+
+.recommendation-card:hover {
+  border-color: #d8d3ff;
+  box-shadow: 0 5px 16px rgba(79, 70, 229, .07);
+  transform: translateY(-2px);
+}
+
+.recommendation-info h3 {
+  margin: 0 0 7px;
+  color: #303b52;
+  font-size: 15px;
+}
+
+.recommendation-info p {
+  margin-bottom: 11px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.recommendation-score {
+  min-width: 65px;
+  height: 65px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #f0efff;
+  color: var(--primary);
+}
+
+.recommendation-score strong {
+  font-size: 23px;
+  line-height: 1;
+}
+
+.recommendation-score small {
+  margin-top: 5px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.recommendation-reasons {
+  grid-column: 1 / -1;
+  padding-top: 13px;
+  border-top: 1px solid #eceef5;
+}
+
+.recommendation-reasons > strong {
+  color: #59647a;
+  font-size: 10px;
+}
+
+.recommendation-reasons ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0;
+  margin: 10px 0 0;
+  list-style: none;
+}
+
+.recommendation-reasons li {
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: #eaf8f1;
+  color: #16865b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  #recommendationsContent {
+    padding: 17px 19px;
+  }
+
+  .recommendation-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .recommendation-info h3 {
+    font-size: 13px;
+  }
+
+  .recommendation-score {
+    min-width: 55px;
+    height: 55px;
+  }
+
+  .recommendation-score strong {
+    font-size: 19px;
+  }
+
+  .recommendation-reasons ul {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

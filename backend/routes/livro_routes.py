@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from pymongo.errors import PyMongoError
 from bson import ObjectId
-
+from backend.services.recomendacao_service import recomendar_livros
 from backend.database import verificar_conexao
 
 from backend.validators.livro_validator import validar_livro
@@ -14,11 +14,8 @@ from backend.services.livro_service import (
 )
 
 
-# Criação do Blueprint
 livros_bp = Blueprint("livros", __name__)
 
-
-# READ: listar livros
 @livros_bp.get("/livros")
 def rota_listar_livros():
 
@@ -35,7 +32,6 @@ def rota_listar_livros():
         }), 503
 
 
-# CREATE: cadastrar livro
 @livros_bp.post("/livros")
 def rota_cadastrar_livro():
 
@@ -64,7 +60,6 @@ def rota_cadastrar_livro():
         }), 503
 
 
-# UPDATE: atualizar livro
 @livros_bp.put("/livros/<id>")
 def rota_atualizar_livro(id):
 
@@ -98,7 +93,6 @@ def rota_atualizar_livro(id):
         }), 503
 
 
-# DELETE: excluir livro
 @livros_bp.delete("/livros/<id>")
 def rota_excluir_livro(id):
 
@@ -122,4 +116,27 @@ def rota_excluir_livro(id):
     except PyMongoError:
         return jsonify({
             "erro": "Não foi possível excluir o livro."
+        }), 503
+
+@livros_bp.get("/livros/<id>/recomendacoes")
+def rota_recomendar_livros(id):
+
+    if not ObjectId.is_valid(id):
+        return jsonify({"erro": "ID inválido."}), 400
+
+    try:
+        verificar_conexao()
+
+        resultado = recomendar_livros(id)
+
+        if resultado is None:
+            return jsonify({
+                "erro": "Livro não encontrado."
+            }), 404
+
+        return jsonify(resultado), 200
+
+    except PyMongoError:
+        return jsonify({
+            "erro": "Não foi possível gerar as recomendações."
         }), 503
